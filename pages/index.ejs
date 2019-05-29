@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script>
+        fetch('http://127.0.0.1:3030/leaderId')
+        .then((respuesta) => {
+            document.getElementById('leader-id').value = respuesta.body.id;
+        })
+    </script>
+    <title>Document</title>
+</head>
+
+<body>
+    <section>
+        <div>
+            <h3>La respuesta es del servidor 1: </h3>
+            <hr>
+            <input type="text" id="leader-id" value="Cargando...."/>
+        </div>
+    </section>
+    <% include components/navigation.ejs %>
+</body>
+
+</html>
