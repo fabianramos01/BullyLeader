@@ -2,34 +2,56 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
-var leadearElection = true;
+var leadearElection = false;
 var isLeader = true;
 var idServer = 9;
 var leaderId = 9;
 
-var ipList = ["http://192.168.1.19:3030", "http://192.168.1.19:3031"]
+var ipList = ["http://localhost:3031", "http://localhost:3032"];
 
-router.post('/selectLeader', function(req, res) {
-    console.log(req.body.id);
+var serverList = [];
+
+router.get('/coordinator', function(req, res) {
     for (let index = 0; index < ipList.length; index++) {
         axios.get(ipList[index] + '/get_serverId')
-        
+            .then(response => {
+                if (response.data.participation == true) {
+                    serverList.push([ipList[index], response.data.id]);
+                }
+            }).catch(error => {
+                console.log(error);
+            });
     }
+    evaluateId();
 });
 
-function sendId(idServ, res) {
-    axios.post(ip + '/selectLeader', {id: idServ})
-        .then(response => {
-            console.log('Election in progress');
-        })
-        .catch(error => {
-            res.send('error');
-        });
+function evaluateId() {
+    var leader = true;
+    for (let index = 0; index < serverList.length; index++) {
+        if (serverList[index][1] > idServer) {
+            leader = false;
+            sendMessage(serverList[index][0]);
+        }
+    }
+    if (leader == true) {
+        leaderId = idServer;
+        isLeader = true;
+        console.log(leaderId + " - : - " + idServer)
+    }
 }
 
-router.get('/forefitFromLeader', function(req, res) { //isLeader to false - leaderElection to false
+function sendMessage(ipS) {
+    axios.get(ipS + '/coordinator')
+    .then(response => {
+        console.log('Ok');
+    }).catch(error => {
+        console.log('error');
+    });
+}
+
+router.get('/forefitFromLeader', function(req, res) {
     leadearElection=false;
-    axios.post(ip + '/selectLeader', {id: 0})
+    axios.get(ipList[0] + '/coordinator')
         .then(response => {
             console.log('Election in progress');
         })
@@ -41,7 +63,7 @@ router.get('/forefitFromLeader', function(req, res) { //isLeader to false - lead
 router.get('/get_serverId', function(req, res){
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    res.send({id:leaderId});
+    res.send({id:idServer, participation:leadearElection});
 });
 
 module.exports = router;
